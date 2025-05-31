@@ -108,7 +108,7 @@ const Home = () => {
       const q = query(
         collection(db, 'invoices'),
         orderBy('createdAt', 'desc'),
-        limit(7)
+        limit(6)
       );
       const querySnapshot = await getDocs(q);
       const docs = querySnapshot.docs.map(doc => ({
@@ -191,7 +191,7 @@ const Home = () => {
             padding: '10px',
             borderRadius: '8px'
           }}>
-            <p>{invoice.customerName}</p>
+            <p style={{LineClamp:2}}>{invoice.customerName}</p>
             <p>{format( invoice.createdAt?.toDate(), 'dd/MM/yyyy hh:mm:ss a')}</p>
           </div>
         ))}

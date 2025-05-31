@@ -12,6 +12,7 @@ import { db } from "../../firebase";
 import Select from "react-select";
 import "../Newinvoice/Newinvoice.css";
 import CustomMenuList from "./CustomMenuList ";
+import toast from 'react-hot-toast';
 
 const Newinvoice = () => {
   const [customers, setCustomers] = useState([]);
@@ -131,17 +132,16 @@ const Newinvoice = () => {
 
     try {
       await addDoc(collection(db, "invoices"), invoiceData);
-      alert("Invoice saved successfully!");
+      toast.success("Invoice Saved Successfully")
       window.location.reload();
     } catch (error) {
-      console.error("Error adding document: ", error);
-      alert("Failed to save invoice.");
+      toast.success("Failed to Save invoice")
     }
   };
 
   const handleAddProducts = () => {
     if (!selectedProduct || !productPrice || !productQty) {
-      alert("Please fill product details.");
+      toast.error("Please fill product details.")
       return;
     }
 
@@ -159,6 +159,7 @@ const Newinvoice = () => {
     setSelectedProduct(null);
     setProductPrice(0);
     setProductQty(0);
+    toast.success("Product Added")
   };
 
   const [product, setProduct] = useState({
@@ -187,7 +188,7 @@ const Newinvoice = () => {
 
       setProducts((prevProducts) => [...prevProducts, newProduct]);
 
-      alert("Product added!");
+      toast.success("Product Added")
       setselectaddproduct(false);
       setProduct({ name: "", gst: "", hsn: "", qtytype: "" });
     } catch (err) {
@@ -201,7 +202,7 @@ const Newinvoice = () => {
       const docRef = await addDoc(collection(db, "customers"), customer);
       const newcust = { id: docRef.id, ...customer };
       setCustomers((prevCustomers) => [...prevCustomers, newcust]);
-      alert("Customer added!");
+      toast.success("Customer Added")
       setselectaddcustomer(false);
       setcustomer({ name: "", phone: "", address: "" });
     } catch (err) {
@@ -214,8 +215,7 @@ const Newinvoice = () => {
   try {
     const docRef = doc(db, "customers", selectedCustomer.id);
     await updateDoc(docRef, customer);
-    alert("Customer updated!");
-    // Update local state
+    toast.success("customer Updated")
     setCustomers((prev) =>
       prev.map((c) =>
         c.id === selectedCustomer.id ? { ...c, ...customer } : c
@@ -224,7 +224,7 @@ const Newinvoice = () => {
     setselecteditcustomer(false);
   } catch (error) {
     console.error("Error updating customer:", error);
-    alert("Failed to update customer.");
+    toast.error("Failed to update customer.")
   }
 };
 
@@ -233,7 +233,7 @@ const handleupdateproduct = async (e) => {
   try {
     const docRef = doc(db, "products", selectedProduct.id);
     await updateDoc(docRef, product);
-    alert("Product updated!");
+    toast.error("Product updated!")
     // Update local state
     setProducts((prev) =>
       prev.map((p) =>
@@ -243,7 +243,7 @@ const handleupdateproduct = async (e) => {
     setselecteditproduct(false);
   } catch (error) {
     console.error("Error updating product:", error);
-    alert("Failed to update product.");
+    toast.error("Failed to update product.")
   }
 };
 const handleEditproduct = () => {
