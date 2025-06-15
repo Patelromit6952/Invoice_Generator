@@ -68,8 +68,8 @@ const Newinvoice = () => {
     branchname: "",
     accountno: "",
     isfccode: "",
-    openingbal: "",
-    status: ""
+    status: "",
+    closingbal:""
   });
 
 
@@ -89,8 +89,8 @@ const Newinvoice = () => {
     branchname: "",
     accountno: "",
     isfccode: "",
-    openingbal: "",
-    status: ""
+    status: "",
+    closingbal:""
   });
 
   const [editProduct, setEditProduct] = useState({
@@ -225,69 +225,96 @@ const Newinvoice = () => {
     data: p
   }));
 
-  const handleSubmit1 = async () => {
-    const grandTotal = productList.reduce((sum, item) => {
-      const gstAmount = (item.total * Number(item.gst)) / 100;
-      return sum + item.total + gstAmount;
-    }, 0);
+const handleSubmit1 = async () => {
+  const grandTotal = productList.reduce((sum, item) => {
+    const gstAmount = (item.total * Number(item.gst)) / 100;
+    return sum + item.total + gstAmount;
+  }, 0);
 
-    const subtotal = productList.reduce((sum, item) => {
-      return sum + item.total;
-    }, 0)
-    const invoiceData = {
-      customerName: selectedCustomer?.name,
-      customerPhone: selectedCustomer?.phone,
-      customerAddress: selectedCustomer?.address,
-      pytype,
-      billType,
-      invoiceNo,
-      products: productList,
-      uid: selectedCustomer?.id,
-      grandTotal,
-      subtotal,
-      createdAt: new Date()
-    };
-    // console.log(invoiceData);
+  const subtotal = productList.reduce((sum, item) => sum + item.total, 0);
 
-    try {
-      if (pytype == "debit" && selectedCustomer?.id) {
-        const ledgerRef = doc(db, 'ledger', selectedCustomer?.id);
-        let type = ""
-        if (billType == "purchase") type = "credit"
-        else type = "debit"
-        const entryToAdd = {
-          amount: grandTotal,
-          type: type,
-          date: format(new Date(), 'dd/MM/yyyy hh:mm:ss a')
-          ,
-        };
-        const existingDoc = await getDoc(ledgerRef);
-        if (existingDoc.exists()) {
-          await updateDoc(ledgerRef, {
-            entries: arrayUnion(entryToAdd)
-          });
-        } else {
-          await setDoc(ledgerRef, {
-            customerId: selectedCustomer?.id,
-            entries: [entryToAdd]
-          });
-        }
-      }
-      const userRef = doc(db, "customers", selectedCustomer?.id);
-      const userSnap = await getDoc(userRef);
-      await updateDoc(userRef,{"status":"debit"})
-      await addDoc(collection(db, "invoices"), invoiceData);
-      if (billType == "sales") await incrementCounter()
-      toast.success("Invoice Saved Successfully");
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
-    } catch (error) {
-      console.log(error);
-
-      toast.error("Failed to Save invoice"); // fixed from toast.success
-    }
+  const invoiceData = {
+    customerName: selectedCustomer?.name,
+    customerPhone: selectedCustomer?.phone,
+    customerAddress: selectedCustomer?.address,
+    pytype,
+    billType,
+    invoiceNo,
+    products: productList,
+    uid: selectedCustomer?.id,
+    grandTotal,
+    subtotal,
+    createdAt: new Date()
   };
+
+  try {
+    if (pytype === "debit" && selectedCustomer?.id) {
+      const ledgerRef = doc(db, 'ledger', selectedCustomer?.id);
+      const type = billType === "purchase" ? "credit" : "debit";
+
+      const entryToAdd = {
+        custtype: selectedCustomer.group,
+        billType: billType,
+        invoiceNo: invoiceNo,
+        amount: grandTotal,
+        type: type,
+        date: format(new Date(), 'dd/MM/yyyy hh:mm:ss a')
+      };
+
+      const existingDoc = await getDoc(ledgerRef);
+      if (existingDoc.exists()) {
+        await updateDoc(ledgerRef, {
+          entries: arrayUnion(entryToAdd)
+        });
+      } else {
+        await setDoc(ledgerRef, {
+          customerId: selectedCustomer?.id,
+          entries: [entryToAdd]
+        });
+      }
+
+      // 🔁 Update customer's closingAmount and status
+      const customerRef = doc(db, 'customers', selectedCustomer?.id);
+      const customerSnap = await getDoc(customerRef);
+
+      if (customerSnap.exists()) {
+        const customerData = customerSnap.data();
+        const group = customerData.group; // "debitors" or "creditors"
+        let closing = Number(customerData.closingbal || 0);
+        const entryAmount = Number(grandTotal);
+
+        if (group === "debitors") {
+          // Debitor: credit => they owe more, debit => they paid
+          if (type === 'credit') closing += entryAmount;
+          else closing -= entryAmount;
+        } else if (group === "creditors") {
+          // Creditor: credit => we owe less, debit => we owe more
+          if (type === 'credit') closing -= entryAmount;
+          else closing += entryAmount;
+        }
+
+        const updatedStatus = closing >= 0 ? "debit" : "credit";
+
+        await updateDoc(customerRef, {
+          closingbal: Math.abs(closing).toString(),
+          status: updatedStatus
+        });
+      }
+    }
+
+    await addDoc(collection(db, "invoices"), invoiceData);
+    if (billType === "sales") await incrementCounter();
+
+    toast.success("Invoice Saved Successfully");
+    setTimeout(() => {
+      window.location.reload();
+    }, 2000);
+  } catch (error) {
+    console.log(error);
+    toast.error("Failed to Save invoice");
+  }
+};
+
 
   const handleAddProducts = () => {
     if (!selectedProduct || !productPrice || !productQty) {
@@ -788,7 +815,7 @@ const Newinvoice = () => {
               <input
                 type="text"
                 name="openingbal"
-                value={customer.openingbal}
+                value={customer.closingbal}
                 onChange={handleChangeCustomer}
                 placeholder="Opening Balance"
                 className="border border-gray-300 rounded-md px-3 py-2"
@@ -972,16 +999,18 @@ const Newinvoice = () => {
               <input
                 type="text"
                 name="openingbal"
-                value={editCustomer.openingbal}
-                onChange={handleChangeEditCustomer}
+                readOnly
+                value={editCustomer.closingbal}
+                // onChange={handleChangeEditCustomer}
                 placeholder="Opening Balance"
                 className="border border-gray-300 rounded-md px-3 py-2"
               />
               <select
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-base min-h-[40px]"
                 name="status"
+                readOnly
                 value={editCustomer.status}
-                onChange={handleChangeEditCustomer}
+                // onChange={handleChangeEditCustomer}
                 required={editCustomer.openingbal !== ""}
 
               >

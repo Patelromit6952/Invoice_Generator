@@ -232,53 +232,75 @@ const CbEntry = () => {
   //   }
   // };
 
-  const handleAddEntry = async () => {
-    if (!selectedGroup || !selectedCustomer || !amount || !type) {
-      toast.error("Please fill  details.");
-      return;
-    }
+const handleAddEntry = async () => {
+  if (!selectedGroup || !selectedCustomer || !amount || !type) {
+    toast.error("Please fill all details.");
+    return;
+  }
 
-    const newEntry = {
-      customerName: selectedCustomer.name,
-      group: selectedGroup.bankname,
+  try {
+    const ledgerRef = doc(db, 'ledger', selectedCustomer?.id);
+    const type1 = type === "payment" ? "debit" : "credit";
+
+    const entryToAdd = {
+      pytype: selectedGroup.bankname,
       amount: amount,
-      type: type,
+      type: type1,
+      date: format(new Date(), 'dd/MM/yyyy hh:mm:ss a'),
     };
 
-
-    try {
-        const ledgerRef = doc(db, 'ledger', selectedCustomer?.id);
-        let type1 = ""
-        if (type == "payment") type1 = "debit"
-        else type1 = "credit"
-        const entryToAdd = {
-          pytype:selectedGroup.bankname,
-          amount: amount,
-          type: type1,
-          date: format(new Date(), 'dd/MM/yyyy hh:mm:ss a'),
-        };
-        const existingDoc = await getDoc(ledgerRef);
-        if (existingDoc.exists()) {
-          await updateDoc(ledgerRef, {
-            entries: arrayUnion(entryToAdd)
-          });
-        } else {
-          await setDoc(ledgerRef, {
-            customerId: selectedCustomer?.id,
-            entries: [entryToAdd]
-          });
-        }
-      
-      toast.success("Entry Saved Successfully");
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
-    } catch (error) {
-      console.log(error);
-      toast.error("Failed to Save entry");
+    const existingDoc = await getDoc(ledgerRef);
+    if (existingDoc.exists()) {
+      await updateDoc(ledgerRef, {
+        entries: arrayUnion(entryToAdd)
+      });
+    } else {
+      await setDoc(ledgerRef, {
+        customerId: selectedCustomer?.id,
+        entries: [entryToAdd]
+      });
     }
 
-  };
+    // 🔁 Update the customer's closing amount and status
+    const customerRef = doc(db, 'customers', selectedCustomer?.id);
+    const customerSnap = await getDoc(customerRef);
+
+    if (customerSnap.exists()) {
+      const customerData = customerSnap.data();
+      const group = customerData.group; // "debitors" or "creditors"
+      let closing = Number(customerData.closingbal || 0);
+      const entryAmount = Number(amount);
+
+      if (group === "debitors") {
+        // normal logic
+        if (type1 === 'credit') closing -= entryAmount;
+        else closing += entryAmount;
+      } else if (group === "creditors") {
+        // reversed logic
+        if (type1 === 'credit') closing += entryAmount;
+        else closing -= entryAmount;
+      }
+
+      const newStatus = closing >= 0 ? "debit" : "credit";
+
+      await updateDoc(customerRef, {
+        closingbal: Math.abs(closing).toString(),
+        status: newStatus
+      });
+    }
+
+    toast.success("Entry Saved Successfully");
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
+
+  } catch (error) {
+    console.error("Error adding entry:", error);
+    toast.error("Failed to save entry");
+  }
+};
+
+
 
   const handleChangeCustomer = (e) => {
     const { name, value } = e.target;

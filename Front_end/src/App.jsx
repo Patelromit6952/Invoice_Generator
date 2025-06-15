@@ -15,6 +15,7 @@ import Newinvoice from './components/Newinvoice/Newinvoice.jsx';
 import Acledger from './components/ACLedger/Acledger.jsx';
 import AcDetails from './components/ACLedger/AcDetails.jsx';
 import CbEntry from './components/CashBankEntry/CbEntry.jsx';
+import OutstandingPage from './components/Outstanding/OutstandingPage.jsx';
 
 function App() {
   const myRouter = createBrowserRouter([
@@ -33,6 +34,7 @@ function App() {
         { path: '/dashboard/invoices', element: <Invoices /> },
         { path: '/dashboard/acledger/customer/:id', element: <AcDetails /> },
         { path: '/dashboard/cbentry', element: <CbEntry /> },
+        { path: '/dashboard/outstanding', element: <OutstandingPage /> },
         { path: '/dashboard/invoice-details', element: <InvoiceDetails /> },
         { path: '/dashboard/setting', element: <Settings /> },
       ]

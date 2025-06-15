@@ -30,7 +30,7 @@ const Dashboard = () => {
           <img src={profile} alt="profile-pic" className="w-24 h-24 rounded-full object-cover" />
           <Link to="/dashboard/setting" className="text-lg font-bold">{localStorage.getItem('cName')}</Link>
         </div>
-        <nav className="flex flex-col gap-4 mt-5 px-2">
+        <nav className="flex flex-col gap-2 mt-3 px-2">
           <Link to="/dashboard/home" className="flex items-center text-white text-xl p-4 hover:bg-blue-600 transition">
             <IoMdHome size={22} className="mr-2" /> Home
           </Link>
@@ -45,6 +45,9 @@ const Dashboard = () => {
           </Link>
           <Link to="/dashboard/cbentry" className="flex items-center text-white text-xl p-4 hover:bg-blue-600 transition">
             <IoIosSettings size={25} className="mr-2" /> Cash/Bank Entry
+          </Link>
+            <Link to="/dashboard/outstanding" className="flex items-center text-white text-xl p-4 hover:bg-blue-600 transition">
+            <IoIosSettings size={25} className="mr-2" />Outstanding
           </Link>
           <Link to="/dashboard/invoices" className="flex items-center text-white text-xl p-4 hover:bg-blue-600 transition">
             <FaFileInvoice size={22} className="mr-2" /> Invoices

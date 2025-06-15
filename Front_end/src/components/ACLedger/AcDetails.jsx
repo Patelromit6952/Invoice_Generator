@@ -108,10 +108,37 @@ const AcDetails = () => {
                     <tbody>
                         {transactions.map((entry, idx) => (
                             <tr key={idx} className="text-center">
-                                 <td className="p-2 border">
+                                <td className="p-2 border">
                                     {entry.date?.toDate ? entry.date.toDate().toLocaleDateString() : entry.date}
                                 </td>
-                                <td className="p-2 border capitalize"> {entry.type === 'credit' ? ` ${entry.type}(${entry?.pytype})` : `${entry.type}`}</td>
+                                <td className="p-2 border capitalize">
+                                    {
+                                        entry.custtype === "creditors"
+                                            ? (entry.type === "credit"
+                                                ? (entry.billType && entry.invoiceNo
+                                                    ? `${entry.billType} A/c (${entry.invoiceNo})`
+                                                    : `${entry.pytype || ''}`
+                                                )
+                                                : `${entry.pytype || ''}`
+                                            )
+                                            : entry.custtype === "debitors"
+                                                ? (entry.type === "debit"
+                                                    ? (entry.billType && entry.invoiceNo
+                                                        ? `${entry.billType} A/c (${entry.invoiceNo})`
+                                                        : `${entry.pytype || ''}`
+                                                    )
+                                                    : `${entry.pytype || ''}`
+                                                )
+                                                : (entry.type === "credit"
+                                                    ? `${entry.pytype || ''}`
+                                                    : (entry.billType && entry.invoiceNo
+                                                        ? `${entry.billType} A/c (${entry.invoiceNo})`
+                                                        : `${entry.pytype || ''}`
+                                                    )
+                                                )
+                                    }
+                                </td>
+
                                 <td className="p-2 border">
                                     {entry.type === 'credit' ? `₹ ${entry.amount}` : '-'}
                                 </td>
