@@ -19,7 +19,7 @@ const Acledger = () => {
         ...doc.data()
       })).filter((customer) => customer.status !== "");
       setCustomers(customersList);
-      setFilteredCustomers(customersList); // set initially
+      setFilteredCustomers(customersList); 
     } catch (error) {
       console.error('Error fetching customers:', error);
     }
@@ -66,7 +66,7 @@ const Acledger = () => {
               <div>
                 <p className="font-semibold text-lg">{customer.name}</p>
                {
-                customer.openingbal == "0"|| "" || 0 ? ( <p className="text-sm capitalize text-gray-600">Status: {'All Clear'}</p>) : ( <p className="text-sm capitalize text-gray-600">Status: {customer.group || 'N/A'}</p>)
+                customer.closingbal == "0"|| "" || 0 ? ( <p className="text-sm capitalize text-gray-600">Status: {'All Clear'}</p>) : ( <p className="text-sm capitalize text-gray-600">Status: {customer.status || 'N/A'}</p>)
                }
               </div>
               <div className="text-right text-green-700 font-bold">

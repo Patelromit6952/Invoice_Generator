@@ -141,7 +141,7 @@ const CbEntry = () => {
       id: doc.id,
       ...doc.data()
     }));
-    console.log(customerList);
+    // console.log(customerList);
 
     setCustomers(customerList);
 
@@ -278,7 +278,7 @@ const handleAddEntry = async () => {
         else closing -= entryAmount;
       }
 
-      const newStatus = closing >= 0 ? "debit" : "credit";
+      const newStatus = closing >= 0 ? "credit" : "debit";
 
       await updateDoc(customerRef, {
         closingbal: Math.abs(closing).toString(),

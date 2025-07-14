@@ -69,7 +69,8 @@ const Newinvoice = () => {
     accountno: "",
     isfccode: "",
     status: "",
-    closingbal:""
+    closingbal:"",
+    openingbal:"0"
   });
 
 
@@ -90,7 +91,8 @@ const Newinvoice = () => {
     accountno: "",
     isfccode: "",
     status: "",
-    closingbal:""
+    closingbal:"",
+    openingbal:"0"
   });
 
   const [editProduct, setEditProduct] = useState({
@@ -250,6 +252,7 @@ const handleSubmit1 = async () => {
   try {
     if (pytype === "debit" && selectedCustomer?.id) {
       const ledgerRef = doc(db, 'ledger', selectedCustomer?.id);
+
       const type = billType === "purchase" ? "credit" : "debit";
 
       const entryToAdd = {
@@ -273,33 +276,34 @@ const handleSubmit1 = async () => {
         });
       }
 
-      // 🔁 Update customer's closingAmount and status
-      const customerRef = doc(db, 'customers', selectedCustomer?.id);
-      const customerSnap = await getDoc(customerRef);
+const customerRef = doc(db, 'customers', selectedCustomer.id);
+const customerSnap = await getDoc(customerRef);
 
-      if (customerSnap.exists()) {
-        const customerData = customerSnap.data();
-        const group = customerData.group; // "debitors" or "creditors"
-        let closing = Number(customerData.closingbal || 0);
-        const entryAmount = Number(grandTotal);
+if (customerSnap.exists()) {
+  const customerData = customerSnap.data();
 
-        if (group === "debitors") {
-          // Debitor: credit => they owe more, debit => they paid
-          if (type === 'credit') closing += entryAmount;
-          else closing -= entryAmount;
-        } else if (group === "creditors") {
-          // Creditor: credit => we owe less, debit => we owe more
-          if (type === 'credit') closing -= entryAmount;
-          else closing += entryAmount;
-        }
+  const group = customerData.group;
+  const amount = parseFloat(grandTotal);
+  const opening = parseFloat(customerData.openingbal || '0');
+  
+  let closing = 0;
+  if(opening == 0)  closing = parseFloat(customerData.closingbal)
+  else closing = opening
 
-        const updatedStatus = closing >= 0 ? "debit" : "credit";
+  if (group === 'debitors') {
+    closing = type === 'credit' ? closing + amount : closing - amount;
+  } else if (group === 'creditors') {
+    closing = type === 'credit' ? closing - amount : closing + amount;
+  }
 
-        await updateDoc(customerRef, {
-          closingbal: Math.abs(closing).toString(),
-          status: updatedStatus
-        });
-      }
+  const updatedStatus = closing >= 0 ? 'debit' : 'credit';
+
+  await updateDoc(customerRef, {
+    closingbal: Math.abs(closing).toFixed(2).toString(),
+    status: updatedStatus
+  });
+}
+
     }
 
     await addDoc(collection(db, "invoices"), invoiceData);
@@ -815,7 +819,7 @@ const handleSubmit1 = async () => {
               <input
                 type="text"
                 name="openingbal"
-                value={customer.closingbal}
+                value={customer.openingbal}
                 onChange={handleChangeCustomer}
                 placeholder="Opening Balance"
                 className="border border-gray-300 rounded-md px-3 py-2"
@@ -1000,7 +1004,7 @@ const handleSubmit1 = async () => {
                 type="text"
                 name="openingbal"
                 readOnly
-                value={editCustomer.closingbal}
+                value={editCustomer.openingbal}
                 // onChange={handleChangeEditCustomer}
                 placeholder="Opening Balance"
                 className="border border-gray-300 rounded-md px-3 py-2"
