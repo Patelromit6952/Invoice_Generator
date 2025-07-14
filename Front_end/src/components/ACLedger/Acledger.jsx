@@ -43,7 +43,7 @@ const Acledger = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-3xl font-bold mb-4 text-center">A/C Ledger</h1>
+      <h1 className="text-3xl font-bold mb-4">A/C Ledger</h1>
 
       <input
         type="text"

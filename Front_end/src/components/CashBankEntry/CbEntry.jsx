@@ -261,22 +261,19 @@ const handleAddEntry = async () => {
       });
     }
 
-    // 🔁 Update the customer's closing amount and status
     const customerRef = doc(db, 'customers', selectedCustomer?.id);
     const customerSnap = await getDoc(customerRef);
 
     if (customerSnap.exists()) {
       const customerData = customerSnap.data();
-      const group = customerData.group; // "debitors" or "creditors"
+      const group = customerData.group; 
       let closing = Number(customerData.closingbal || 0);
       const entryAmount = Number(amount);
 
       if (group === "debitors") {
-        // normal logic
         if (type1 === 'credit') closing -= entryAmount;
         else closing += entryAmount;
       } else if (group === "creditors") {
-        // reversed logic
         if (type1 === 'credit') closing += entryAmount;
         else closing -= entryAmount;
       }

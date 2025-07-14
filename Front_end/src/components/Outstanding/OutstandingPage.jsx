@@ -29,8 +29,8 @@ const OutstandingPage = () => {
   }, []);
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">🧾 Outstanding Report</h2>
+    <div className="p-4">
+      <h2 className="text-2xl  font-bold mb-4">🧾 Outstanding Report</h2>
 
       <table className="table-auto w-full border border-collapse shadow-sm">
         <thead className="bg-gray-200">
@@ -38,7 +38,7 @@ const OutstandingPage = () => {
             <th className="p-3 border">Customer Name</th>
             <th className="p-3 border">Group</th>
             <th className="p-3 border">Status</th>
-            <th className="p-3 border text-right">Outstanding Amount</th>
+            <th className="p-3 border">Outstanding Amount</th>
           </tr>
         </thead>
         <tbody>
